@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production build outputs
+dist/
+build/
+target/
+*.jar
+*.war
+
+# Environment variables & Keys
+.env
+.env.local
+.env.production
+serviceAccountKey.json
+*.pem
+
+# IDE / System files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.log
+.mvn/wrapper/maven-wrapper.jar

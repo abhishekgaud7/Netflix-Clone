@@ -1,0 +1,113 @@
+import React, { useState, useEffect } from 'react';
+import Navbar from '../components/Navbar';
+import Banner from '../components/Banner';
+import Row from '../components/Row';
+import MovieModal from '../components/MovieModal';
+import { requests, fetchMoviesByCategory, searchMoviesApi, POSTER_BASE_URL } from '../api/tmdb';
+
+const HomePage = () => {
+  const [featuredMovie, setFeaturedMovie] = useState(null);
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Load random featured trending movie for top hero banner
+  useEffect(() => {
+    const loadFeatured = async () => {
+      const trending = await fetchMoviesByCategory(requests.fetchTrending);
+      if (trending.length > 0) {
+        const randomIndex = Math.floor(Math.random() * Math.min(5, trending.length));
+        setFeaturedMovie(trending[randomIndex]);
+      }
+    };
+    loadFeatured();
+  }, []);
+
+  // Debounced search trigger
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim() === '') {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchMoviesApi(searchQuery);
+      setSearchResults(results.filter(m => m.poster_path || m.backdrop_path));
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  return (
+    <div className="min-h-screen bg-[#141414] text-white selection:bg-red-600 pb-16">
+      {/* Top Navbar */}
+      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+
+      {/* Main Content: Search Overlay vs Browse Dashboard */}
+      {searchQuery ? (
+        <div className="pt-24 px-4 md:px-12 max-w-7xl mx-auto space-y-6">
+          <h2 className="text-xl md:text-3xl font-bold text-gray-200">
+            Search Results for <span className="text-red-500 font-extrabold">"{searchQuery}"</span>
+          </h2>
+
+          {isSearching && searchResults.length === 0 ? (
+            <p className="text-gray-400">Searching streaming catalog...</p>
+          ) : searchResults.length === 0 ? (
+            <p className="text-gray-400 py-12 text-center">No movies or TV shows found matching your search.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+              {searchResults.map(movie => (
+                <div
+                  key={movie.id}
+                  onClick={() => setSelectedMovie(movie)}
+                  className="bg-gray-900 rounded-md overflow-hidden cursor-pointer hover:scale-105 transition transform shadow-lg group border border-gray-800"
+                >
+                  <img
+                    src={`${POSTER_BASE_URL}${movie.poster_path || movie.backdrop_path}`}
+                    alt={movie.title || movie.name}
+                    className="w-full h-64 md:h-72 object-cover group-hover:brightness-90 transition"
+                  />
+                  <div className="p-3">
+                    <h3 className="text-sm font-bold text-white truncate">{movie.title || movie.name}</h3>
+                    <p className="text-xs text-green-400 font-medium mt-1">
+                      {Math.round((movie.vote_average || 8) * 10)}% Match
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Top Hero Banner */}
+          <Banner movie={featuredMovie} onSelectMovie={setSelectedMovie} />
+
+          {/* Categorized Movie Rows */}
+          <div className="-mt-12 md:-mt-24 relative z-20 space-y-4">
+            <Row title="Trending Now" fetchUrl={requests.fetchTrending} isLarge={true} onSelectMovie={setSelectedMovie} />
+            <Row title="Top Rated Masterpieces" fetchUrl={requests.fetchTopRated} onSelectMovie={setSelectedMovie} />
+            <Row title="Action Blockbusters" fetchUrl={requests.fetchActionMovies} onSelectMovie={setSelectedMovie} />
+            <Row title="Comedy Hits" fetchUrl={requests.fetchComedyMovies} onSelectMovie={setSelectedMovie} />
+            <Row title="Spooky & Horror" fetchUrl={requests.fetchHorrorMovies} onSelectMovie={setSelectedMovie} />
+            <Row title="Documentaries & Real Stories" fetchUrl={requests.fetchDocumentaries} onSelectMovie={setSelectedMovie} />
+          </div>
+        </>
+      )}
+
+      {/* Detail View Modal */}
+      {selectedMovie && (
+        <MovieModal
+          movie={selectedMovie}
+          onClose={() => setSelectedMovie(null)}
+          onSelectMovie={setSelectedMovie}
+        />
+      )}
+    </div>
+  );
+};
+
+export default HomePage;
