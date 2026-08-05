@@ -67,12 +67,12 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/90 backdrop-blur-md overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md overflow-y-auto animate-fade-in"
     >
       <div className="relative w-full max-w-4xl max-h-[92vh] bg-[#181818] rounded-2xl overflow-y-auto no-scrollbar shadow-2xl border border-gray-800 my-auto flex flex-col">
         
-        {/* Sticky Top Header Bar with Close Button */}
-        <div className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-[#181818]/95 backdrop-blur-md border-b border-gray-800">
+        {/* Top Header Bar with Close Button */}
+        <div className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-[#181818]/95 backdrop-blur-md border-b border-gray-800 shrink-0">
           <div className="flex items-center space-x-2 text-red-600 font-extrabold tracking-wider text-sm">
             <Film className="w-5 h-5" />
             <span>NETFLIX PREVIEW</span>
@@ -87,13 +87,14 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
           </button>
         </div>
 
-        {/* PERFECT 16:9 YOUTUBE VIDEO CONTAINER (Fixes Black Screen / Audio Only bug) */}
-        <div className="relative w-full aspect-video bg-black overflow-hidden">
+        {/* GUARANTEED EXPLICIT HEIGHT VIDEO PLAYER CONTAINER (Prevents 0px Flex Collapse) */}
+        <div className="relative w-full h-[250px] sm:h-[360px] md:h-[440px] bg-black overflow-hidden shrink-0">
           {trailerKey ? (
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&rel=0`}
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&enablejsapi=1`}
               title="Movie Trailer"
-              className="absolute inset-0 w-full h-full border-0"
+              className="w-full h-full border-0 block"
+              style={{ width: '100%', height: '100%' }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
@@ -110,7 +111,7 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
         </div>
 
         {/* Content Body Below Video */}
-        <div className="p-6 md:p-8 space-y-6">
+        <div className="p-6 md:p-8 space-y-6 flex-1">
           {/* Title & Add to Watchlist Row */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
             <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">{title}</h2>
