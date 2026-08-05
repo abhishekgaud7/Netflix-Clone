@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X, Play, Plus, Check, Star, Calendar } from 'lucide-react';
+import { X, Plus, Check, Star, Calendar } from 'lucide-react';
 import { IMAGE_BASE_URL, POSTER_BASE_URL, fetchMovieDetailsAndVideos } from '../api/tmdb';
 import { useWatchlist } from '../context/WatchlistContext';
 
 const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const [details, setDetails] = useState(null);
   const [trailerKey, setTrailerKey] = useState(null);
-  const [loading, setLoading] = useState(true);
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
 
-  // Handle ESC key press & body scroll lock
+  // ESC key listener & body scroll lock
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
 
@@ -29,16 +25,14 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   useEffect(() => {
     if (movie) {
       const getDetails = async () => {
-        setLoading(true);
         const data = await fetchMovieDetailsAndVideos(movie.id, movie.media_type || 'movie');
         if (data) {
           setDetails(data);
           if (data.videos?.results?.length > 0) {
-            const trailer = data.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || data.videos.results[0];
+            const trailer = data.videos.results.find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube') || data.videos.results[0];
             if (trailer) setTrailerKey(trailer.key);
           }
         }
-        setLoading(false);
       };
       getDetails();
     }
@@ -64,41 +58,42 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in"
     >
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-[#181818] rounded-2xl overflow-y-auto no-scrollbar shadow-2xl border border-gray-800 my-auto flex flex-col">
+      <div className="relative w-full max-w-4xl max-h-[92vh] bg-[#181818] rounded-xl overflow-y-auto no-scrollbar shadow-2xl border border-gray-800 my-auto flex flex-col">
         
-        {/* Floating Close Button */}
+        {/* Floating Close Button (Top-Right of Modal) */}
         <button 
           onClick={onClose}
-          className="sticky top-4 right-4 ml-auto z-[1000] bg-black/80 hover:bg-red-600 text-white p-2.5 rounded-full border border-gray-600 hover:border-red-500 transition-all duration-200 shadow-2xl cursor-pointer flex items-center justify-center group"
+          className="absolute top-4 right-4 z-50 bg-black/80 hover:bg-red-600 text-white p-2.5 rounded-full border border-gray-600 hover:border-white transition-all duration-200 shadow-2xl cursor-pointer flex items-center justify-center group"
           aria-label="Close modal"
           title="Close (Esc)"
         >
-          <X className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
         </button>
 
         {/* Media / Video Trailer Section */}
-        <div className="relative aspect-video w-full max-h-[45vh] bg-black overflow-hidden -mt-14">
+        <div className="relative aspect-video w-full bg-black overflow-hidden">
           {trailerKey ? (
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&rel=0&controls=1`}
+              src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&rel=0&controls=1&modestbranding=1`}
               title="Movie Trailer"
               className="w-full h-full object-cover"
               allow="autoplay; encrypted-media; picture-in-picture"
               allowFullScreen
             />
           ) : (
-            <>
+            <div className="relative w-full h-full">
               <img 
                 src={`${IMAGE_BASE_URL}${movie.backdrop_path || movie.poster_path}`} 
                 alt={title}
                 className="w-full h-full object-cover" 
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-black/30" />
-            </>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-black/40" />
+            </div>
           )}
 
+          {/* Title & Action Overlay */}
           <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 flex flex-wrap items-center justify-between z-20 gap-3">
             <div>
               <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-white drop-shadow-lg">{title}</h2>
