@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Play, Plus, Check, Star, ThumbsUp, Calendar, Film } from 'lucide-react';
+import { X, Play, Plus, Check, Star, Calendar } from 'lucide-react';
 import { IMAGE_BASE_URL, POSTER_BASE_URL, fetchMovieDetailsAndVideos } from '../api/tmdb';
 import { useWatchlist } from '../context/WatchlistContext';
 
@@ -8,6 +8,23 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const [trailerKey, setTrailerKey] = useState(null);
   const [loading, setLoading] = useState(true);
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
+
+  // Handle ESC key press & body scroll lock
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
 
   useEffect(() => {
     if (movie) {
@@ -33,7 +50,8 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const title = movie.title || movie.name || movie.original_name;
   const overview = movie.overview || details?.overview || 'No description available for this title.';
 
-  const handleWatchlistToggle = () => {
+  const handleWatchlistToggle = (e) => {
+    e.stopPropagation();
     if (inList) {
       removeFromWatchlist(movie.id);
     } else {
@@ -42,20 +60,26 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto animate-fade-in">
-      <div className="relative w-full max-w-4xl bg-[#181818] rounded-xl overflow-hidden shadow-2xl border border-gray-800 my-8">
+    <div 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-[999] flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in"
+    >
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-[#181818] rounded-2xl overflow-y-auto no-scrollbar shadow-2xl border border-gray-800 my-auto flex flex-col">
         
-        {/* Close Button */}
+        {/* Floating Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 bg-[#181818]/80 hover:bg-[#181818] text-white p-2 rounded-full border border-gray-600 transition cursor-pointer"
+          className="sticky top-4 right-4 ml-auto z-[1000] bg-black/80 hover:bg-red-600 text-white p-2.5 rounded-full border border-gray-600 hover:border-red-500 transition-all duration-200 shadow-2xl cursor-pointer flex items-center justify-center group"
           aria-label="Close modal"
+          title="Close (Esc)"
         >
-          <X className="w-6 h-6" />
+          <X className="w-6 h-6 group-hover:scale-110 transition-transform" />
         </button>
 
         {/* Media / Video Trailer Section */}
-        <div className="relative aspect-video w-full bg-black overflow-hidden">
+        <div className="relative aspect-video w-full max-h-[45vh] bg-black overflow-hidden -mt-14">
           {trailerKey ? (
             <iframe
               src={`https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&rel=0&controls=1`}
@@ -75,15 +99,15 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
             </>
           )}
 
-          <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between z-20">
+          <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 flex flex-wrap items-center justify-between z-20 gap-3">
             <div>
-              <h2 className="text-2xl md:text-4xl font-extrabold text-white drop-shadow-lg">{title}</h2>
+              <h2 className="text-xl sm:text-2xl md:text-4xl font-extrabold text-white drop-shadow-lg">{title}</h2>
             </div>
 
             <div className="flex items-center space-x-3">
               <button 
                 onClick={handleWatchlistToggle}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-semibold text-sm transition cursor-pointer ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md font-semibold text-xs sm:text-sm transition cursor-pointer shadow-lg ${
                   inList ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'
                 }`}
               >
@@ -95,10 +119,10 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
         </div>
 
         {/* Content Body */}
-        <div className="p-6 md:p-8 space-y-6">
+        <div className="p-4 sm:p-6 md:p-8 space-y-6">
           {/* Metadata Row */}
-          <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-gray-300">
-            <span className="text-green-400 font-bold text-base">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm font-semibold text-gray-300">
+            <span className="text-green-400 font-bold text-sm sm:text-base">
               {Math.round((movie.vote_average || details?.vote_average || 8.5) * 10)}% Match
             </span>
             <span className="flex items-center space-x-1 text-yellow-400">
@@ -115,17 +139,17 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
             {details?.runtime && (
               <span className="text-gray-400">{details.runtime} mins</span>
             )}
-            <span className="border border-red-600 text-red-500 px-1.5 py-0.5 rounded text-xs font-bold uppercase">Ultra HD 4K</span>
+            <span className="border border-red-600 text-red-500 px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase">Ultra HD 4K</span>
           </div>
 
           {/* Overview Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
-              <p className="text-gray-200 text-base leading-relaxed">{overview}</p>
+              <p className="text-gray-200 text-sm sm:text-base leading-relaxed">{overview}</p>
             </div>
 
             {/* Cast & Info Sidebar */}
-            <div className="space-y-3 text-sm text-gray-400 bg-gray-900/60 p-4 rounded-lg border border-gray-800">
+            <div className="space-y-3 text-xs sm:text-sm text-gray-400 bg-gray-900/60 p-4 rounded-lg border border-gray-800">
               <div>
                 <span className="text-gray-500 block text-xs uppercase font-bold">Cast</span>
                 <p className="text-gray-200 mt-0.5">
@@ -149,8 +173,8 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
           {/* Similar Recommendations */}
           {details?.similar?.results?.length > 0 && (
             <div className="pt-4 border-t border-gray-800">
-              <h3 className="text-lg font-bold text-white mb-4">More Like This</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <h3 className="text-base sm:text-lg font-bold text-white mb-4">More Like This</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                 {details.similar.results.slice(0, 4).map(sim => (
                   <div 
                     key={sim.id}
@@ -163,11 +187,11 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
                     <img 
                       src={`${POSTER_BASE_URL}${sim.backdrop_path || sim.poster_path}`} 
                       alt={sim.title || sim.name} 
-                      className="w-full h-28 object-cover"
+                      className="w-full h-24 sm:h-28 object-cover"
                     />
-                    <div className="p-2.5">
+                    <div className="p-2">
                       <p className="text-xs font-bold text-white truncate">{sim.title || sim.name}</p>
-                      <p className="text-[10px] text-green-400 mt-1">{Math.round((sim.vote_average || 8) * 10)}% Match</p>
+                      <p className="text-[10px] text-green-400 mt-0.5">{Math.round((sim.vote_average || 8) * 10)}% Match</p>
                     </div>
                   </div>
                 ))}
