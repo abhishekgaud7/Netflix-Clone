@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Check, Star, Calendar, Film } from 'lucide-react';
+import { X, Plus, Check, Star, Calendar, Film, Image as ImageIcon, Video } from 'lucide-react';
 import { IMAGE_BASE_URL, POSTER_BASE_URL, fetchMovieDetailsAndVideos } from '../api/tmdb';
 import { useWatchlist } from '../context/WatchlistContext';
 
@@ -8,6 +8,7 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1574375927938-d5a98e8f
 const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const [details, setDetails] = useState(null);
   const [trailerKey, setTrailerKey] = useState(null);
+  const [showTrailer, setShowTrailer] = useState(true);
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
 
   // ESC key listener & body scroll lock
@@ -31,8 +32,12 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
         if (data) {
           setDetails(data);
           if (data.videos?.results?.length > 0) {
-            const trailer = data.videos.results.find(v => (v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube') || data.videos.results[0];
-            if (trailer) setTrailerKey(trailer.key);
+            // Find working trailer or teaser
+            const trailers = data.videos.results.filter(v => v.site === 'YouTube');
+            const officialTrailer = trailers.find(v => v.type === 'Trailer' && v.name?.toLowerCase().includes('official')) ||
+                                  trailers.find(v => v.type === 'Trailer') ||
+                                  trailers[0];
+            if (officialTrailer) setTrailerKey(officialTrailer.key);
           }
         }
       };
@@ -48,7 +53,7 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
 
   const getMediaUrl = (path) => {
     if (path && path !== 'null' && path !== 'undefined') {
-      return `${POSTER_BASE_URL}${path}`;
+      return `${IMAGE_BASE_URL}${path}`;
     }
     return FALLBACK_IMAGE;
   };
@@ -71,12 +76,39 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
     >
       <div className="relative w-full max-w-4xl max-h-[92vh] bg-[#181818] rounded-2xl overflow-y-auto no-scrollbar shadow-2xl border border-gray-800 my-auto flex flex-col">
         
-        {/* Top Header Bar with Close Button */}
-        <div className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-[#181818]/95 backdrop-blur-md border-b border-gray-800 shrink-0">
-          <div className="flex items-center space-x-2 text-red-600 font-extrabold tracking-wider text-sm">
-            <Film className="w-5 h-5" />
-            <span>NETFLIX PREVIEW</span>
+        {/* Top Header Bar with Close & Media Toggle */}
+        <div className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-[#181818]/95 backdrop-blur-md border-b border-gray-800 shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 text-red-600 font-extrabold tracking-wider text-xs sm:text-sm">
+              <Film className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>NETFLIX PREVIEW</span>
+            </div>
+
+            {/* Media Mode Toggle (Trailer vs Backdrop) */}
+            {trailerKey && (
+              <div className="flex items-center bg-gray-900 border border-gray-700 rounded-lg p-0.5 text-xs">
+                <button
+                  onClick={() => setShowTrailer(true)}
+                  className={`flex items-center space-x-1 px-2 py-1 rounded-md font-semibold transition ${
+                    showTrailer ? 'bg-red-600 text-white shadow' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <Video className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Trailer</span>
+                </button>
+                <button
+                  onClick={() => setShowTrailer(false)}
+                  className={`flex items-center space-x-1 px-2 py-1 rounded-md font-semibold transition ${
+                    !showTrailer ? 'bg-red-600 text-white shadow' : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Poster</span>
+                </button>
+              </div>
+            )}
           </div>
+
           <button 
             onClick={onClose}
             className="bg-gray-800 hover:bg-red-600 text-white p-2 rounded-full border border-gray-600 hover:border-white transition cursor-pointer flex items-center justify-center shadow-lg"
@@ -87,11 +119,11 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
           </button>
         </div>
 
-        {/* GUARANTEED EXPLICIT HEIGHT VIDEO PLAYER CONTAINER (Prevents 0px Flex Collapse) */}
+        {/* MEDIA DISPLAY CONTAINER */}
         <div className="relative w-full h-[250px] sm:h-[360px] md:h-[440px] bg-black overflow-hidden shrink-0">
-          {trailerKey ? (
+          {showTrailer && trailerKey ? (
             <iframe
-              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0&enablejsapi=1`}
+              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
               title="Movie Trailer"
               className="w-full h-full border-0 block"
               style={{ width: '100%', height: '100%' }}
@@ -105,7 +137,7 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
                 alt={title}
                 className="w-full h-full object-cover" 
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-black/30" />
             </div>
           )}
         </div>
