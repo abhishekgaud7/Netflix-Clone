@@ -8,21 +8,31 @@ import { requests, fetchMoviesByCategory, searchMoviesApi, POSTER_BASE_URL } fro
 const HomePage = () => {
   const [featuredMovie, setFeaturedMovie] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Load random featured trending movie for top hero banner
+  // Load featured banner movie based on activeCategory
   useEffect(() => {
     const loadFeatured = async () => {
-      const trending = await fetchMoviesByCategory(requests.fetchTrending);
-      if (trending.length > 0) {
-        const randomIndex = Math.floor(Math.random() * Math.min(5, trending.length));
-        setFeaturedMovie(trending[randomIndex]);
+      let targetUrl = requests.fetchTrending;
+      if (activeCategory === 'tv') {
+        targetUrl = requests.fetchNetflixOriginals;
+      } else if (activeCategory === 'movies') {
+        targetUrl = requests.fetchTopRated;
+      } else if (activeCategory === 'popular') {
+        targetUrl = requests.fetchActionMovies;
+      }
+
+      const list = await fetchMoviesByCategory(targetUrl);
+      if (list.length > 0) {
+        const randomIndex = Math.floor(Math.random() * Math.min(6, list.length));
+        setFeaturedMovie(list[randomIndex]);
       }
     };
     loadFeatured();
-  }, []);
+  }, [activeCategory]);
 
   // Debounced search trigger
   useEffect(() => {
@@ -44,7 +54,12 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-[#141414] text-white selection:bg-red-600 pb-16">
       {/* Top Navbar */}
-      <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <Navbar 
+        searchQuery={searchQuery} 
+        onSearchChange={setSearchQuery}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+      />
 
       {/* Main Content: Search Overlay vs Browse Dashboard */}
       {searchQuery ? (
@@ -86,14 +101,46 @@ const HomePage = () => {
           {/* Top Hero Banner */}
           <Banner movie={featuredMovie} onSelectMovie={setSelectedMovie} />
 
-          {/* Categorized Movie Rows */}
+          {/* DYNAMIC CATEGORY FILTER ROWS */}
           <div className="-mt-12 md:-mt-24 relative z-20 space-y-4">
-            <Row title="Trending Now" fetchUrl={requests.fetchTrending} isLarge={true} onSelectMovie={setSelectedMovie} />
-            <Row title="Top Rated Masterpieces" fetchUrl={requests.fetchTopRated} onSelectMovie={setSelectedMovie} />
-            <Row title="Action Blockbusters" fetchUrl={requests.fetchActionMovies} onSelectMovie={setSelectedMovie} />
-            <Row title="Comedy Hits" fetchUrl={requests.fetchComedyMovies} onSelectMovie={setSelectedMovie} />
-            <Row title="Spooky & Horror" fetchUrl={requests.fetchHorrorMovies} onSelectMovie={setSelectedMovie} />
-            <Row title="Documentaries & Real Stories" fetchUrl={requests.fetchDocumentaries} onSelectMovie={setSelectedMovie} />
+            {activeCategory === 'home' && (
+              <>
+                <Row title="Trending Now" fetchUrl={requests.fetchTrending} isLarge={true} onSelectMovie={setSelectedMovie} />
+                <Row title="Netflix Originals" fetchUrl={requests.fetchNetflixOriginals} onSelectMovie={setSelectedMovie} />
+                <Row title="Top Rated Masterpieces" fetchUrl={requests.fetchTopRated} onSelectMovie={setSelectedMovie} />
+                <Row title="Action Blockbusters" fetchUrl={requests.fetchActionMovies} onSelectMovie={setSelectedMovie} />
+                <Row title="Comedy Hits" fetchUrl={requests.fetchComedyMovies} onSelectMovie={setSelectedMovie} />
+                <Row title="Spooky & Horror" fetchUrl={requests.fetchHorrorMovies} onSelectMovie={setSelectedMovie} />
+                <Row title="Documentaries & Real Stories" fetchUrl={requests.fetchDocumentaries} onSelectMovie={setSelectedMovie} />
+              </>
+            )}
+
+            {activeCategory === 'tv' && (
+              <>
+                <Row title="Popular TV Series" fetchUrl={requests.fetchNetflixOriginals} isLarge={true} onSelectMovie={setSelectedMovie} />
+                <Row title="Trending TV Shows" fetchUrl={requests.fetchTrending} onSelectMovie={setSelectedMovie} />
+                <Row title="Comedy Series" fetchUrl={requests.fetchComedyMovies} onSelectMovie={setSelectedMovie} />
+                <Row title="Romance & Drama" fetchUrl={requests.fetchRomanceMovies} onSelectMovie={setSelectedMovie} />
+              </>
+            )}
+
+            {activeCategory === 'movies' && (
+              <>
+                <Row title="Top Rated Movies" fetchUrl={requests.fetchTopRated} isLarge={true} onSelectMovie={setSelectedMovie} />
+                <Row title="Action Movies" fetchUrl={requests.fetchActionMovies} onSelectMovie={setSelectedMovie} />
+                <Row title="Horror Movies" fetchUrl={requests.fetchHorrorMovies} onSelectMovie={setSelectedMovie} />
+                <Row title="Romantic Movies" fetchUrl={requests.fetchRomanceMovies} onSelectMovie={setSelectedMovie} />
+                <Row title="Documentaries" fetchUrl={requests.fetchDocumentaries} onSelectMovie={setSelectedMovie} />
+              </>
+            )}
+
+            {activeCategory === 'popular' && (
+              <>
+                <Row title="Trending Today" fetchUrl={requests.fetchTrending} isLarge={true} onSelectMovie={setSelectedMovie} />
+                <Row title="Critically Acclaimed" fetchUrl={requests.fetchTopRated} onSelectMovie={setSelectedMovie} />
+                <Row title="Popular Action Hits" fetchUrl={requests.fetchActionMovies} onSelectMovie={setSelectedMovie} />
+              </>
+            )}
           </div>
         </>
       )}

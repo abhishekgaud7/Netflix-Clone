@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Search, Bell, ChevronDown, LogOut, User, X } from 'lucide-react';
 
-const Navbar = ({ onSearchChange, searchQuery }) => {
+const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCategoryChange }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -32,47 +32,85 @@ const Navbar = ({ onSearchChange, searchQuery }) => {
     }
   };
 
+  const handleTabClick = (cat) => {
+    if (location.pathname !== '/browse') {
+      navigate('/browse');
+    }
+    if (onCategoryChange) {
+      onCategoryChange(cat);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <nav className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-500 px-4 md:px-12 py-3 flex items-center justify-between ${
       isScrolled ? 'bg-[#141414]/95 backdrop-blur-md shadow-lg' : 'bg-gradient-to-b from-black/80 via-black/40 to-transparent'
     }`}>
       {/* Left section: Logo & Nav Links */}
-      <div className="flex items-center space-x-8">
+      <div className="flex items-center space-x-6 md:space-x-8">
         <div 
-          onClick={() => navigate('/browse')}
+          onClick={() => handleTabClick('home')}
           className="cursor-pointer transition hover:opacity-80 flex items-center"
         >
           <span className="text-red-600 font-black text-2xl md:text-3xl tracking-tighter drop-shadow">NETFLIX</span>
         </div>
 
-        <ul className="hidden md:flex items-center space-x-6 text-sm text-gray-300">
+        <ul className="hidden md:flex items-center space-x-2 lg:space-x-4 text-sm">
           <li 
-            onClick={() => navigate('/browse')}
-            className={`cursor-pointer transition duration-200 hover:text-white font-medium hover:scale-105 ${location.pathname === '/browse' ? 'text-white font-bold border-b-2 border-red-600 pb-0.5' : ''}`}
+            onClick={() => handleTabClick('home')}
+            onMouseEnter={() => handleTabClick('home')}
+            className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
+              location.pathname === '/browse' && activeCategory === 'home' 
+                ? 'bg-red-600 text-white shadow-md scale-105' 
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+            }`}
           >
             Home
           </li>
+
           <li 
-            onClick={() => navigate('/browse')}
-            className="cursor-pointer transition duration-200 hover:text-white font-medium hover:scale-105"
+            onClick={() => handleTabClick('tv')}
+            onMouseEnter={() => handleTabClick('tv')}
+            className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
+              location.pathname === '/browse' && activeCategory === 'tv' 
+                ? 'bg-red-600 text-white shadow-md scale-105' 
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+            }`}
           >
             TV Shows
           </li>
+
           <li 
-            onClick={() => navigate('/browse')}
-            className="cursor-pointer transition duration-200 hover:text-white font-medium hover:scale-105"
+            onClick={() => handleTabClick('movies')}
+            onMouseEnter={() => handleTabClick('movies')}
+            className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
+              location.pathname === '/browse' && activeCategory === 'movies' 
+                ? 'bg-red-600 text-white shadow-md scale-105' 
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+            }`}
           >
             Movies
           </li>
+
           <li 
-            onClick={() => navigate('/browse')}
-            className="cursor-pointer transition duration-200 hover:text-white font-medium hover:scale-105"
+            onClick={() => handleTabClick('popular')}
+            onMouseEnter={() => handleTabClick('popular')}
+            className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
+              location.pathname === '/browse' && activeCategory === 'popular' 
+                ? 'bg-red-600 text-white shadow-md scale-105' 
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+            }`}
           >
             New & Popular
           </li>
+
           <li 
             onClick={() => navigate('/my-list')}
-            className={`cursor-pointer transition duration-200 hover:text-white font-medium hover:scale-105 ${location.pathname === '/my-list' ? 'text-white font-bold border-b-2 border-red-600 pb-0.5' : ''}`}
+            className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
+              location.pathname === '/my-list' 
+                ? 'bg-red-600 text-white shadow-md scale-105' 
+                : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
+            }`}
           >
             My List
           </li>
