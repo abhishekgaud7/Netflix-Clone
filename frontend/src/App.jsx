@@ -6,7 +6,11 @@ import { WatchlistProvider } from './context/WatchlistContext';
 import LandingPage from './pages/LandingPage';
 import ProfileSelection from './pages/ProfileSelection';
 import HomePage from './pages/HomePage';
+import TVShowsPage from './pages/TVShowsPage';
+import MoviesPage from './pages/MoviesPage';
+import NewPopularPage from './pages/NewPopularPage';
 import MyListPage from './pages/MyListPage';
+import AccountPage from './pages/AccountPage';
 
 const ProtectedRoute = ({ children, requireProfile = true }) => {
   const { currentUser, selectedProfile } = useAuth();
@@ -54,10 +58,42 @@ function AppRoutes() {
         } 
       />
       <Route 
+        path="/tv-shows" 
+        element={
+          <ProtectedRoute requireProfile={true}>
+            <TVShowsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/movies" 
+        element={
+          <ProtectedRoute requireProfile={true}>
+            <MoviesPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/latest" 
+        element={
+          <ProtectedRoute requireProfile={true}>
+            <NewPopularPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/my-list" 
         element={
           <ProtectedRoute requireProfile={true}>
             <MyListPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/account" 
+        element={
+          <ProtectedRoute requireProfile={true}>
+            <AccountPage />
           </ProtectedRoute>
         } 
       />

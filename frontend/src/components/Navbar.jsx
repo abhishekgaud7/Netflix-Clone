@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Search, Bell, ChevronDown, LogOut, User, X } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, User, Settings, X } from 'lucide-react';
 
 const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCategoryChange }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -32,13 +32,11 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
     }
   };
 
-  const handleTabClick = (cat) => {
-    if (location.pathname !== '/browse') {
-      navigate('/browse');
+  const handleNavClick = (path, catKey) => {
+    if (catKey && onCategoryChange) {
+      onCategoryChange(catKey);
     }
-    if (onCategoryChange) {
-      onCategoryChange(cat);
-    }
+    navigate(path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -49,7 +47,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
       {/* Left section: Logo & Nav Links */}
       <div className="flex items-center space-x-6 md:space-x-8">
         <div 
-          onClick={() => handleTabClick('home')}
+          onClick={() => handleNavClick('/browse', 'home')}
           className="cursor-pointer transition hover:opacity-80 flex items-center"
         >
           <span className="text-red-600 font-black text-2xl md:text-3xl tracking-tighter drop-shadow">NETFLIX</span>
@@ -57,10 +55,10 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
 
         <ul className="hidden md:flex items-center space-x-2 lg:space-x-4 text-sm">
           <li 
-            onClick={() => handleTabClick('home')}
-            onMouseEnter={() => handleTabClick('home')}
+            onClick={() => handleNavClick('/browse', 'home')}
+            onMouseEnter={() => handleNavClick('/browse', 'home')}
             className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
-              location.pathname === '/browse' && activeCategory === 'home' 
+              location.pathname === '/browse' 
                 ? 'bg-red-600 text-white shadow-md scale-105' 
                 : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
             }`}
@@ -69,10 +67,10 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
           </li>
 
           <li 
-            onClick={() => handleTabClick('tv')}
-            onMouseEnter={() => handleTabClick('tv')}
+            onClick={() => handleNavClick('/tv-shows')}
+            onMouseEnter={() => handleNavClick('/tv-shows')}
             className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
-              location.pathname === '/browse' && activeCategory === 'tv' 
+              location.pathname === '/tv-shows' 
                 ? 'bg-red-600 text-white shadow-md scale-105' 
                 : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
             }`}
@@ -81,10 +79,10 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
           </li>
 
           <li 
-            onClick={() => handleTabClick('movies')}
-            onMouseEnter={() => handleTabClick('movies')}
+            onClick={() => handleNavClick('/movies')}
+            onMouseEnter={() => handleNavClick('/movies')}
             className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
-              location.pathname === '/browse' && activeCategory === 'movies' 
+              location.pathname === '/movies' 
                 ? 'bg-red-600 text-white shadow-md scale-105' 
                 : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
             }`}
@@ -93,10 +91,10 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
           </li>
 
           <li 
-            onClick={() => handleTabClick('popular')}
-            onMouseEnter={() => handleTabClick('popular')}
+            onClick={() => handleNavClick('/latest')}
+            onMouseEnter={() => handleNavClick('/latest')}
             className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
-              location.pathname === '/browse' && activeCategory === 'popular' 
+              location.pathname === '/latest' 
                 ? 'bg-red-600 text-white shadow-md scale-105' 
                 : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
             }`}
@@ -105,7 +103,8 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
           </li>
 
           <li 
-            onClick={() => navigate('/my-list')}
+            onClick={() => handleNavClick('/my-list')}
+            onMouseEnter={() => handleNavClick('/my-list')}
             className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
               location.pathname === '/my-list' 
                 ? 'bg-red-600 text-white shadow-md scale-105' 
@@ -119,7 +118,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
 
       {/* Right section: Search, Notifications, Profile */}
       <div className="flex items-center space-x-4 md:space-x-6">
-        {/* Search Bar with Hover Auto-Expand */}
+        {/* Search Bar */}
         <div 
           onMouseEnter={() => setShowSearch(true)}
           className="relative flex items-center"
@@ -160,7 +159,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
           <span className="absolute -top-1 -right-1 bg-red-600 rounded-full w-2 h-2"></span>
         </button>
 
-        {/* Profile Dropdown with Hover Open/Close */}
+        {/* Profile Dropdown */}
         <div 
           onMouseEnter={() => setShowDropdown(true)}
           onMouseLeave={() => setShowDropdown(false)}
@@ -208,6 +207,17 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
                 >
                   <User className="w-4 h-4" />
                   <span className="text-xs">Manage Profiles</span>
+                </div>
+
+                <div 
+                  onClick={() => {
+                    setShowDropdown(false);
+                    navigate('/account');
+                  }}
+                  className="flex items-center space-x-3 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-800/80 text-gray-300 hover:text-white transition"
+                >
+                  <Settings className="w-4 h-4" />
+                  <span className="text-xs">Account Settings</span>
                 </div>
               </div>
 
