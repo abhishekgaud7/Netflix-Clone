@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Check, Star, Calendar, Film, Image as ImageIcon, Video, ThumbsUp, ThumbsDown, MessageSquare, Volume2, Play } from 'lucide-react';
+import { X, Plus, Check, Star, Calendar, Film, Image as ImageIcon, Video, ThumbsUp, ThumbsDown, MessageSquare, Share2, Play } from 'lucide-react';
 import { IMAGE_BASE_URL, POSTER_BASE_URL, fetchMovieDetailsAndVideos } from '../api/tmdb';
 import { useWatchlist } from '../context/WatchlistContext';
+import Toast from './Toast';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=500&auto=format&fit=crop';
 
@@ -16,11 +17,12 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const [details, setDetails] = useState(null);
   const [trailerKey, setTrailerKey] = useState(null);
   const [showTrailer, setShowTrailer] = useState(true);
-  const [userRating, setUserRating] = useState(null); // 'like', 'dislike', 'superlike'
+  const [userRating, setUserRating] = useState(null);
   const [activeSeason, setActiveSeason] = useState(1);
   const [audioLang, setAudioLang] = useState('English [Original] 5.1');
   const [subtitleLang, setSubtitleLang] = useState('English [CC]');
   const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
 
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
 
@@ -75,9 +77,18 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
     e.stopPropagation();
     if (inList) {
       removeFromWatchlist(movie.id);
+      setToastMessage(`Removed "${title}" from My List`);
     } else {
       addToWatchlist(movie);
+      setToastMessage(`Added "${title}" to My List`);
     }
+  };
+
+  const handleShareMovie = (e) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}/browse?title=${encodeURIComponent(title)}`;
+    navigator.clipboard.writeText(shareUrl);
+    setToastMessage(`Share link for "${title}" copied to clipboard!`);
   };
 
   return (
@@ -89,6 +100,11 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
     >
       <div className="relative w-full max-w-4xl max-h-[92vh] bg-[#181818] rounded-2xl overflow-y-auto no-scrollbar shadow-2xl border border-gray-800 my-auto flex flex-col">
         
+        {/* Toast Notification */}
+        {toastMessage && (
+          <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
+        )}
+
         {/* Top Header Bar with Close & Media Toggle */}
         <div className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-[#181818]/95 backdrop-blur-md border-b border-gray-800 shrink-0">
           <div className="flex items-center space-x-3">
@@ -162,7 +178,16 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
             <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">{title}</h2>
 
             <div className="flex items-center space-x-3">
-              {/* Like / Dislike Rating Controls */}
+              {/* Share Button */}
+              <button
+                onClick={handleShareMovie}
+                className="p-2.5 rounded-full border border-gray-600 bg-gray-900 text-gray-300 hover:text-white hover:border-white transition cursor-pointer"
+                title="Share Title Link"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+
+              {/* Rating Controls */}
               <button 
                 onClick={() => setUserRating(userRating === 'like' ? null : 'like')}
                 className={`p-2.5 rounded-full border border-gray-600 transition cursor-pointer ${
@@ -214,6 +239,7 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
                 <span>{movie.release_date || movie.first_air_date || details?.release_date || '2024'}</span>
               </span>
               <span className="border border-red-600 text-red-500 px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase">Ultra HD 4K</span>
+              <span className="border border-gray-600 text-gray-300 px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium uppercase">Spatial Audio</span>
             </div>
 
             {/* Audio & Subtitles Selector */}
