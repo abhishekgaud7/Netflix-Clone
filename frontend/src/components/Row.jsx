@@ -9,11 +9,15 @@ const Row = ({ title, fetchUrl, isLarge = false, onSelectMovie }) => {
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
 
   useEffect(() => {
+    let isMounted = true;
     const getMovies = async () => {
       const data = await fetchMoviesByCategory(fetchUrl);
-      setMovies(data.filter(m => m.poster_path || m.backdrop_path));
+      if (isMounted) {
+        setMovies(data.filter(m => m.poster_path || m.backdrop_path));
+      }
     };
     getMovies();
+    return () => { isMounted = false; };
   }, [fetchUrl]);
 
   const handleScroll = (direction) => {
@@ -43,10 +47,10 @@ const Row = ({ title, fetchUrl, isLarge = false, onSelectMovie }) => {
           <ChevronLeft className="w-8 h-8" />
         </button>
 
-        {/* Movies Track */}
+        {/* Movies Track with GPU Hardware Acceleration */}
         <div 
           ref={rowRef}
-          className="flex items-center space-x-3 md:space-x-4 overflow-x-scroll no-scrollbar py-4 px-1 scroll-smooth"
+          className="flex items-center space-x-3 md:space-x-4 overflow-x-scroll no-scrollbar py-4 px-1 scroll-smooth transform-gpu"
         >
           {movies.map((movie) => {
             const path = isLarge ? movie.poster_path : (movie.backdrop_path || movie.poster_path);
@@ -57,7 +61,7 @@ const Row = ({ title, fetchUrl, isLarge = false, onSelectMovie }) => {
               <div
                 key={movie.id}
                 onClick={() => onSelectMovie(movie)}
-                className={`relative flex-none cursor-pointer rounded-md overflow-hidden transform transition-all duration-300 hover:scale-105 hover:z-20 hover:shadow-2xl hover:shadow-red-950/40 group/card bg-gray-900 ${
+                className={`relative flex-none cursor-pointer rounded-md overflow-hidden transform transition-all duration-300 hover:scale-105 hover:z-20 hover:shadow-2xl hover:shadow-red-950/40 group/card bg-gray-900 will-change-transform ${
                   isLarge ? 'w-36 md:w-52 h-52 md:h-76' : 'w-44 md:w-64 h-28 md:h-38'
                 }`}
               >
@@ -66,6 +70,7 @@ const Row = ({ title, fetchUrl, isLarge = false, onSelectMovie }) => {
                   alt={movie.title || movie.name}
                   className="w-full h-full object-cover rounded-md group-hover/card:brightness-90 transition"
                   loading="lazy"
+                  decoding="async"
                 />
 
                 {/* Hover Details Card Overlay */}
