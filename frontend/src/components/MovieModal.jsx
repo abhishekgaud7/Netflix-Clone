@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Check, Star, Calendar, Film, Image as ImageIcon, Video, ThumbsUp, ThumbsDown, MessageSquare, Share2, Play } from 'lucide-react';
+import { X, Plus, Check, Star, Calendar, Film, Image as ImageIcon, Video, ThumbsUp, ThumbsDown, MessageSquare, Share2, Play, Users, Lightbulb, ChevronDown } from 'lucide-react';
 import { IMAGE_BASE_URL, POSTER_BASE_URL, fetchMovieDetailsAndVideos } from '../api/tmdb';
 import { useWatchlist } from '../context/WatchlistContext';
 import Toast from './Toast';
+import WatchPartyModal from './WatchPartyModal';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=500&auto=format&fit=crop';
 
@@ -11,6 +12,12 @@ const DUMMY_EPISODES = [
   { id: 2, title: 'Episode 2: Chapter Two - The Weirdo on Maple Street', duration: '55m', overview: 'Lucas, Dustin and Mike try to talk to the girl they found in the woods. Hopper questions an anxious Joyce about a disturbing phone call.' },
   { id: 3, title: 'Episode 3: Chapter Three - Holly, Jolly', duration: '51m', overview: 'An increasingly frantic Joyce believes Will is trying to communicate with her. Eleven has flashbacks of her past experiments.' },
   { id: 4, title: 'Episode 4: Chapter Four - The Body', duration: '53m', overview: 'Refusing to believe Will is dead, Joyce tries to connect with her son. The boys give Eleven a makeover to blend in at school.' }
+];
+
+const DUMMY_TRIVIA = [
+  '🎬 Over 70% of the visual effects were crafted using cutting-edge IMAX 70mm cameras for maximum clarity.',
+  '💡 The lead actor underwent 6 months of intense martial arts and tactical stunt training prior to filming.',
+  '🎵 The original score features a 90-piece orchestra recorded live at Abbey Road Studios in London.'
 ];
 
 const MovieModal = ({ movie, onClose, onSelectMovie }) => {
@@ -22,6 +29,8 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const [audioLang, setAudioLang] = useState('English [Original] 5.1');
   const [subtitleLang, setSubtitleLang] = useState('English [CC]');
   const [showAudioMenu, setShowAudioMenu] = useState(false);
+  const [showWatchParty, setShowWatchParty] = useState(false);
+  const [showTrivia, setShowTrivia] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
@@ -105,6 +114,11 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
           <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
         )}
 
+        {/* Watch Party Modal */}
+        {showWatchParty && (
+          <WatchPartyModal movie={movie} onClose={() => setShowWatchParty(false)} />
+        )}
+
         {/* Top Header Bar with Close & Media Toggle */}
         <div className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-[#181818]/95 backdrop-blur-md border-b border-gray-800 shrink-0">
           <div className="flex items-center space-x-3">
@@ -177,7 +191,17 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-800 pb-4">
             <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">{title}</h2>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* Watch Party Button (Exclusive Feature) */}
+              <button
+                onClick={() => setShowWatchParty(true)}
+                className="flex items-center space-x-1.5 px-3 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white rounded-lg font-bold text-xs shadow-lg transition cursor-pointer"
+                title="Watch with Friends in Sync"
+              >
+                <Users className="w-4 h-4" />
+                <span>Watch Party</span>
+              </button>
+
               {/* Share Button */}
               <button
                 onClick={handleShareMovie}
@@ -211,7 +235,7 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
               {/* Add to Watchlist */}
               <button 
                 onClick={handleWatchlistToggle}
-                className={`flex items-center space-x-2 px-5 py-2.5 rounded-lg font-bold text-sm transition cursor-pointer shadow-xl ${
+                className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition cursor-pointer shadow-xl ${
                   inList ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'
                 }`}
               >
@@ -309,6 +333,28 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* EXCLUSIVE FEATURE: TRIVIA & BEHIND THE SCENES */}
+          <div className="border border-gray-800 bg-gray-900/40 rounded-xl p-4 space-y-3">
+            <button 
+              onClick={() => setShowTrivia(!showTrivia)}
+              className="flex items-center justify-between w-full text-left focus:outline-none"
+            >
+              <div className="flex items-center space-x-2 text-amber-400 font-bold text-xs sm:text-sm">
+                <Lightbulb className="w-4 h-4 fill-amber-400" />
+                <span>Movie Trivia & Behind-The-Scenes Secrets</span>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showTrivia ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showTrivia && (
+              <ul className="space-y-2 pt-2 text-xs text-gray-300 border-t border-gray-800/80">
+                {DUMMY_TRIVIA.map((t, i) => (
+                  <li key={i} className="leading-relaxed bg-gray-900/80 p-2.5 rounded-lg border border-gray-800">{t}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* SEASONS & EPISODES SECTION (For TV Shows & Series) */}
