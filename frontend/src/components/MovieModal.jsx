@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Check, Star, Calendar, Film, Image as ImageIcon, Video, ThumbsUp, ThumbsDown, MessageSquare, Share2, Play, Users, Lightbulb, ChevronDown } from 'lucide-react';
+import { X, Plus, Check, Star, Calendar, Film, Image as ImageIcon, Video, ThumbsUp, ThumbsDown, MessageSquare, Share2, Play, Users, Lightbulb, ChevronDown, Download, Volume2 } from 'lucide-react';
 import { IMAGE_BASE_URL, POSTER_BASE_URL, fetchMovieDetailsAndVideos } from '../api/tmdb';
 import { useWatchlist } from '../context/WatchlistContext';
 import Toast from './Toast';
@@ -20,6 +20,12 @@ const DUMMY_TRIVIA = [
   '🎵 The original score features a 90-piece orchestra recorded live at Abbey Road Studios in London.'
 ];
 
+const HINDI_SUBTITLES = [
+  "हिंदी सबटाइटल्स: 'नमस्ते! इस अद्भुत सिनेमाई यात्रा में आपका स्वागत है...'",
+  "हिंदी सबटाइटल्स: 'यह एक गहरा और भयानक रहस्य है जो इस शहर में छिपा है...'",
+  "हिंदी सबटाइटल्स: 'क्या आप इस महासंग्राम के लिए तैयार हैं? अब कोई रास्ता वापस नहीं है!'"
+];
+
 const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const [details, setDetails] = useState(null);
   const [trailerKey, setTrailerKey] = useState(null);
@@ -27,13 +33,27 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
   const [userRating, setUserRating] = useState(null);
   const [activeSeason, setActiveSeason] = useState(1);
   const [audioLang, setAudioLang] = useState('English [Original] 5.1');
-  const [subtitleLang, setSubtitleLang] = useState('English [CC]');
+  const [subtitleLang, setSubtitleLang] = useState('Hindi');
+  const [subIndex, setSubIndex] = useState(0);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [showWatchParty, setShowWatchParty] = useState(false);
   const [showTrivia, setShowTrivia] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isDownloaded, setIsDownloaded] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
+
+  // Cycle Hindi Subtitles every 4 seconds when Hindi subtitle is active
+  useEffect(() => {
+    if (subtitleLang === 'Hindi') {
+      const interval = setInterval(() => {
+        setSubIndex(prev => (prev + 1) % HINDI_SUBTITLES.length);
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [subtitleLang]);
 
   // ESC key listener & body scroll lock
   useEffect(() => {
@@ -100,6 +120,28 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
     setToastMessage(`Share link for "${title}" copied to clipboard!`);
   };
 
+  const handleDownloadTitle = (e) => {
+    e.stopPropagation();
+    if (isDownloaded) {
+      setToastMessage(`"${title}" is already available offline!`);
+      return;
+    }
+    setDownloading(true);
+    setDownloadProgress(10);
+    const interval = setInterval(() => {
+      setDownloadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setDownloading(false);
+          setIsDownloaded(true);
+          setToastMessage(`"${title}" downloaded for offline viewing! 📥`);
+          return 100;
+        }
+        return prev + 30;
+      });
+    }, 400);
+  };
+
   return (
     <div 
       onClick={(e) => {
@@ -162,13 +204,13 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
           </button>
         </div>
 
-        {/* MEDIA DISPLAY CONTAINER */}
+        {/* MEDIA DISPLAY CONTAINER WITH REAL-TIME HINDI SUBTITLES OVERLAY */}
         <div className="relative w-full h-[250px] sm:h-[360px] md:h-[440px] bg-black overflow-hidden shrink-0">
           {showTrailer && trailerKey ? (
             <iframe
               src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0`}
               title="Movie Trailer"
-              className="w-full h-full border-0 block"
+              className="w-full h-full border-0 block pointer-events-auto"
               style={{ width: '100%', height: '100%' }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -183,6 +225,21 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
               <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-black/30" />
             </div>
           )}
+
+          {/* REAL HINDI SUBTITLE OVERLAY BANNER */}
+          {subtitleLang === 'Hindi' && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/85 border border-yellow-500/60 px-4 py-1.5 rounded-lg text-yellow-300 font-extrabold text-xs sm:text-sm tracking-wide shadow-2xl backdrop-blur-md z-40 text-center max-w-[90%] pointer-events-none animate-pulse">
+              {HINDI_SUBTITLES[subIndex]}
+            </div>
+          )}
+
+          {/* HINDI AUDIO BADGE OVERLAY */}
+          {audioLang === 'Hindi Dolby Atmos' && (
+            <div className="absolute top-4 left-4 bg-red-600/90 text-white font-black text-[10px] sm:text-xs px-2.5 py-1 rounded-md shadow-xl flex items-center space-x-1.5 z-40 backdrop-blur">
+              <Volume2 className="w-3.5 h-3.5" />
+              <span>🔊 हिन्दी ऑडियो (Dolby Atmos)</span>
+            </div>
+          )}
         </div>
 
         {/* Content Body Below Video */}
@@ -192,7 +249,24 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
             <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">{title}</h2>
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              {/* Watch Party Button (Exclusive Feature) */}
+              {/* Offline Download Button */}
+              <button
+                onClick={handleDownloadTitle}
+                disabled={downloading}
+                className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg font-bold text-xs shadow-lg transition cursor-pointer ${
+                  isDownloaded 
+                    ? 'bg-green-600 text-white' 
+                    : downloading 
+                    ? 'bg-gray-800 text-yellow-400 border border-yellow-500' 
+                    : 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-700'
+                }`}
+                title="Download for Offline Watching"
+              >
+                <Download className={`w-4 h-4 ${downloading ? 'animate-bounce text-yellow-400' : ''}`} />
+                <span>{isDownloaded ? 'Downloaded' : downloading ? `Downloading ${downloadProgress}%` : 'Download'}</span>
+              </button>
+
+              {/* Watch Party Button */}
               <button
                 onClick={() => setShowWatchParty(true)}
                 className="flex items-center space-x-1.5 px-3 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white rounded-lg font-bold text-xs shadow-lg transition cursor-pointer"
@@ -263,7 +337,7 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
                 <span>{movie.release_date || movie.first_air_date || details?.release_date || '2024'}</span>
               </span>
               <span className="border border-red-600 text-red-500 px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase">Ultra HD 4K</span>
-              <span className="border border-gray-600 text-gray-300 px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-medium uppercase">Spatial Audio</span>
+              <span className="border border-yellow-500 text-yellow-400 px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase">हिंदी सबटाइटल्स</span>
             </div>
 
             {/* Audio & Subtitles Selector */}
@@ -273,7 +347,7 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
                 className="flex items-center space-x-2 px-3 py-1.5 bg-gray-900 border border-gray-700 hover:border-white rounded-lg text-xs font-semibold text-gray-300 transition cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-red-500" />
-                <span>Audio & Subtitles</span>
+                <span>Audio & Subtitles ({subtitleLang})</span>
               </button>
 
               {showAudioMenu && (
@@ -292,13 +366,13 @@ const MovieModal = ({ movie, onClose, onSelectMovie }) => {
                   </div>
                   <div className="border-t border-gray-800 pt-2">
                     <span className="text-gray-500 block uppercase font-bold text-[10px] mb-1">Subtitles</span>
-                    {['English [CC]', 'Hindi', 'Off'].map(sub => (
+                    {['Hindi', 'English [CC]', 'Off'].map(sub => (
                       <div 
                         key={sub}
                         onClick={() => setSubtitleLang(sub)}
                         className={`px-2 py-1 rounded cursor-pointer transition ${subtitleLang === sub ? 'bg-red-600 text-white font-bold' : 'text-gray-300 hover:bg-gray-800'}`}
                       >
-                        {sub}
+                        {sub === 'Hindi' ? 'हिन्दी (Hindi)' : sub}
                       </div>
                     ))}
                   </div>

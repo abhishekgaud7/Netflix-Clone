@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Search, Bell, ChevronDown, LogOut, User, Settings, X, Dices } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, User, Settings, X, Dices, Globe } from 'lucide-react';
 import CinemaRouletteModal from './CinemaRouletteModal';
 import { fetchMoviesByCategory, requests } from '../api/tmdb';
 
@@ -10,6 +10,8 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
   const [showSearch, setShowSearch] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showRoulette, setShowRoulette] = useState(false);
+  const [lang, setLang] = useState('English');
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [rouletteMovies, setRouletteMovies] = useState([]);
   const { selectedProfile, setSelectedProfile, profiles, logout } = useAuth();
   const navigate = useNavigate();
@@ -76,7 +78,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
                   : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
               }`}
             >
-              Home
+              {lang === 'हिन्दी' ? 'होम' : 'Home'}
             </li>
 
             <li 
@@ -88,7 +90,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
                   : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
               }`}
             >
-              TV Shows
+              {lang === 'हिन्दी' ? 'टीवी शो' : 'TV Shows'}
             </li>
 
             <li 
@@ -100,7 +102,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
                   : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
               }`}
             >
-              Movies
+              {lang === 'हिन्दी' ? 'फिल्मों' : 'Movies'}
             </li>
 
             <li 
@@ -112,7 +114,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
                   : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
               }`}
             >
-              New & Popular
+              {lang === 'हिन्दी' ? 'नई और लोकप्रिय' : 'New & Popular'}
             </li>
 
             <li 
@@ -124,20 +126,50 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
                   : 'text-gray-300 hover:text-white hover:bg-gray-800/60'
               }`}
             >
-              My List
+              {lang === 'हिन्दी' ? 'मेरी सूची' : 'My List'}
             </li>
           </ul>
         </div>
 
-        {/* Right section: Search, AI Roulette, Notifications, Profile */}
+        {/* Right section: Search, Language Switcher, AI Roulette, Notifications, Profile */}
         <div className="flex items-center space-x-3 md:space-x-5">
-          {/* AI Cinema Roulette Button (Exclusive Feature) */}
+          {/* Global Language Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setShowLangMenu(!showLangMenu)}
+              className="flex items-center space-x-1.5 bg-gray-900 border border-gray-700 hover:border-white px-2.5 py-1.5 rounded-lg text-xs font-bold text-gray-200 transition cursor-pointer"
+              title="Change Language / भाषा बदलें"
+            >
+              <Globe className="w-4 h-4 text-red-500" />
+              <span>{lang}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+            </button>
+
+            {showLangMenu && (
+              <div className="absolute right-0 mt-2 w-32 bg-black/95 border border-gray-800 rounded-xl p-2 shadow-2xl z-50 text-xs">
+                <div 
+                  onClick={() => { setLang('English'); setShowLangMenu(false); }}
+                  className={`px-3 py-2 rounded cursor-pointer font-semibold transition ${lang === 'English' ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+                >
+                  English
+                </div>
+                <div 
+                  onClick={() => { setLang('हिन्दी'); setShowLangMenu(false); }}
+                  className={`px-3 py-2 rounded cursor-pointer font-semibold transition ${lang === 'हिन्दी' ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-800'}`}
+                >
+                  हिन्दी (Hindi)
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* AI Cinema Roulette Button */}
           <button
             onClick={handleOpenRoulette}
             className="flex items-center space-x-1.5 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-700 hover:to-amber-700 text-white px-3 py-1.5 rounded-full text-xs font-black shadow-lg transition cursor-pointer"
             title="Spin the Wheel: Can't Decide What to Watch?"
           >
-            <Dices className="w-4 h-4 animate-spin-slow" />
+            <Dices className="w-4 h-4" />
             <span className="hidden sm:inline">AI Roulette</span>
           </button>
 
@@ -158,7 +190,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
               <div className="flex items-center bg-black/95 border border-gray-600 rounded px-2 py-1 ml-2 transition-all duration-300 shadow-xl">
                 <input
                   type="text"
-                  placeholder="Titles, people, genres..."
+                  placeholder={lang === 'हिन्दी' ? "खोजें..." : "Titles, people, genres..."}
                   value={searchQuery || ''}
                   onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
                   autoFocus
