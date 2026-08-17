@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Search, Bell, ChevronDown, LogOut, User, Settings, X, Dices, Globe } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, User, Settings, X, Dices, Globe, Volume2, VolumeX } from 'lucide-react';
 import CinemaRouletteModal from './CinemaRouletteModal';
 import { fetchMoviesByCategory, requests } from '../api/tmdb';
+import { useSound } from './AudioFXEngine';
 
 const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCategoryChange }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -13,6 +14,8 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
   const [lang, setLang] = useState('English');
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [rouletteMovies, setRouletteMovies] = useState([]);
+
+  const { soundEnabled, setSoundEnabled, playSoundEffect } = useSound() || {};
   const { selectedProfile, setSelectedProfile, profiles, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,6 +33,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
   }, []);
 
   const handleOpenRoulette = async () => {
+    playSoundEffect && playSoundEffect('click');
     if (rouletteMovies.length === 0) {
       const data = await fetchMoviesByCategory(requests.fetchTrending);
       setRouletteMovies(data);
@@ -38,6 +42,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
   };
 
   const handleLogout = async () => {
+    playSoundEffect && playSoundEffect('click');
     try {
       await logout();
       navigate('/');
@@ -47,6 +52,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
   };
 
   const handleNavClick = (path, catKey) => {
+    playSoundEffect && playSoundEffect('click');
     if (catKey && onCategoryChange) {
       onCategoryChange(catKey);
     }
@@ -71,7 +77,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
           <ul className="hidden md:flex items-center space-x-2 lg:space-x-4 text-sm">
             <li 
               onClick={() => handleNavClick('/browse', 'home')}
-              onMouseEnter={() => handleNavClick('/browse', 'home')}
+              onMouseEnter={() => { playSoundEffect && playSoundEffect('hover'); handleNavClick('/browse', 'home'); }}
               className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
                 location.pathname === '/browse' 
                   ? 'bg-red-600 text-white shadow-md scale-105' 
@@ -83,7 +89,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
 
             <li 
               onClick={() => handleNavClick('/tv-shows')}
-              onMouseEnter={() => handleNavClick('/tv-shows')}
+              onMouseEnter={() => { playSoundEffect && playSoundEffect('hover'); handleNavClick('/tv-shows'); }}
               className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
                 location.pathname === '/tv-shows' 
                   ? 'bg-red-600 text-white shadow-md scale-105' 
@@ -95,7 +101,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
 
             <li 
               onClick={() => handleNavClick('/movies')}
-              onMouseEnter={() => handleNavClick('/movies')}
+              onMouseEnter={() => { playSoundEffect && playSoundEffect('hover'); handleNavClick('/movies'); }}
               className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
                 location.pathname === '/movies' 
                   ? 'bg-red-600 text-white shadow-md scale-105' 
@@ -107,7 +113,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
 
             <li 
               onClick={() => handleNavClick('/latest')}
-              onMouseEnter={() => handleNavClick('/latest')}
+              onMouseEnter={() => { playSoundEffect && playSoundEffect('hover'); handleNavClick('/latest'); }}
               className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
                 location.pathname === '/latest' 
                   ? 'bg-red-600 text-white shadow-md scale-105' 
@@ -119,7 +125,7 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
 
             <li 
               onClick={() => handleNavClick('/my-list')}
-              onMouseEnter={() => handleNavClick('/my-list')}
+              onMouseEnter={() => { playSoundEffect && playSoundEffect('hover'); handleNavClick('/my-list'); }}
               className={`px-3 py-1 rounded cursor-pointer transition-all duration-200 font-bold ${
                 location.pathname === '/my-list' 
                   ? 'bg-red-600 text-white shadow-md scale-105' 
@@ -131,8 +137,19 @@ const Navbar = ({ onSearchChange, searchQuery, activeCategory = 'home', onCatego
           </ul>
         </div>
 
-        {/* Right section: Search, Language Switcher, AI Roulette, Notifications, Profile */}
+        {/* Right section: Search, Sound FX, Language Switcher, AI Roulette, Notifications, Profile */}
         <div className="flex items-center space-x-3 md:space-x-5">
+          {/* Sound FX Toggle Button */}
+          <button
+            onClick={() => setSoundEnabled && setSoundEnabled(!soundEnabled)}
+            className={`p-2 rounded-lg border text-xs font-bold transition cursor-pointer ${
+              soundEnabled ? 'bg-red-600/20 border-red-600 text-red-500' : 'bg-gray-900 border-gray-700 text-gray-400'
+            }`}
+            title={soundEnabled ? "Sound FX Enabled" : "Sound FX Muted"}
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4 text-red-500" /> : <VolumeX className="w-4 h-4 text-gray-400" />}
+          </button>
+
           {/* Global Language Switcher */}
           <div className="relative">
             <button

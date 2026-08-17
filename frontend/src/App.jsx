@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { WatchlistProvider } from './context/WatchlistContext';
+import { SoundProvider } from './components/AudioFXEngine';
 
 // LAZY LOAD ALL ROUTE COMPONENTS FOR ULTRA-FAST PERFORMANCE
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -117,9 +118,11 @@ function App() {
   return (
     <AuthProvider>
       <WatchlistProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <SoundProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </SoundProvider>
       </WatchlistProvider>
     </AuthProvider>
   );
